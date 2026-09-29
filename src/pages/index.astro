@@ -1,11 +1,366 @@
 ---
-import Welcome from '../components/Welcome.astro';
+import EventCard from '../components/EventCard.astro';
 import Layout from '../layouts/Layout.astro';
+import schedule from '../data/schedule.json';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+type Event = (typeof schedule)[number];
+
+const DAYS = [
+	{ day: '2026-10-02', label: 'Пт, 2', sub: 'Майстер-день' },
+	{ day: '2026-10-03', label: 'Сб, 3', sub: '!FESTrepublic' },
+	{ day: '2026-10-04', label: 'Нд, 4', sub: '!FESTrepublic' },
+];
+const ALL_DAY_MIN = 6 * 60;
+
+const minutes = (hm: string) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3));
+
+const days = DAYS.map((d) => {
+	const events = schedule.filter((e) => e.day === d.day);
+	// Master day has one venue, so filter it by room instead
+	const byPlace = new Set(events.map((e) => e.venue)).size === 1;
+	const filterKey = (e: Event) => (byPlace ? e.place : e.venue) ?? e.venue;
+	const allDay = events.filter((e) => minutes(e.end) - minutes(e.start) >= ALL_DAY_MIN);
+	const slots = Map.groupBy(
+		events.filter((e) => !allDay.includes(e)),
+		(e) => e.start,
+	);
+	return { ...d, allDay, slots, filterKey, filters: [...new Set(events.map(filterKey))] };
+});
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="Дайс Кон 2026 — Розклад" description="Розклад фестивалю настільних пригод Дайс Кон 2026, 2–4 жовтня, !FESTrepublic, Львів.">
+	<header class="hero">
+		<h1>Розклад <span>Дайс Кон 2026</span></h1>
+		<img class="dragon" src="/dragon.webp" width="417" height="380" alt="Дракон ДайсКон" />
+		<p class="kicker">2–4 жовтня · !FESTrepublic, Львів</p>
+		<svg class="ridge" viewBox="0 0 1200 80" preserveAspectRatio="none" aria-hidden="true">
+			<path fill="var(--orange)" opacity="0.6" d="M0 80V38l60-22 50 28 70-34 60 30 40-14 80 26 70-40 50 22 60-18 70 30 50-12 80 24 60-36 70 28 50-16 80 22 60-30 50 20 60-8 30 12V80Z" />
+			<path fill="var(--wine-deep)" d="M0 80V60l80-16 60 18 90-26 70 22 50-10 90 18 60-20 70 16 80-24 60 20 70-8 80 16 60-22 90 20 50-10 70 14 70-6V80Z" />
+		</svg>
+		{['d20', 'd12', 'd10', 'd100'].map((d) => <img class={`die ${d}`} src={`/${d}.webp`} alt="" aria-hidden="true" />)}
+	</header>
+
+	<nav class="tabs" aria-label="Дні">
+		{days.map((d) => (
+			<button type="button" data-tab={d.day}>
+				<b>{d.label}</b>
+				<small>{d.sub}</small>
+			</button>
+		))}
+	</nav>
+
+	<main>
+		{days.map((d) => (
+			<section class="day" data-day={d.day} hidden>
+				<div class="chips" role="group" aria-label="Фільтр">
+					<button type="button" data-filter="all" aria-pressed="true">Усі</button>
+					<button type="button" data-filter="fav" aria-pressed="false">★ Обране</button>
+					{d.filters.map((f) => <button type="button" data-filter={f} aria-pressed="false">{f}</button>)}
+				</div>
+
+				<p class="empty" hidden><img src="/d20.webp" width="72" alt="" />Тут порожньо. Тисни ☆ біля події, щоб додати її в обране.</p>
+
+				{d.allDay.length > 0 && (
+					<details class="group">
+						<summary>Протягом дня <span>{d.allDay.length}</span></summary>
+						{d.allDay.map((e) => <EventCard e={e} filter={d.filterKey(e)} />)}
+					</details>
+				)}
+				{[...d.slots].map(([start, events]) => (
+					<div class="group">
+						<h2>{start}</h2>
+						{events.map((e) => <EventCard e={e} filter={d.filterKey(e)} />)}
+					</div>
+				))}
+			</section>
+		))}
+	</main>
+
+	<footer>
+		Неофіційний розклад. Актуальне — на <a href="https://www.dicecon.fun/">dicecon.fun</a>
+	</footer>
 </Layout>
+
+<script>
+	const KEY = 'dicecon-favs';
+	let favs = new Set<string>();
+	try {
+		favs = new Set(JSON.parse(localStorage.getItem(KEY) ?? '[]'));
+	} catch {}
+
+	const tabs = document.querySelectorAll<HTMLButtonElement>('[data-tab]');
+	const sections = document.querySelectorAll<HTMLElement>('section.day');
+
+	function kyivNow() {
+		const p = Object.fromEntries(
+			new Intl.DateTimeFormat('en-CA', {
+				timeZone: 'Europe/Kyiv',
+				year: 'numeric',
+				month: '2-digit',
+				day: '2-digit',
+				hour: '2-digit',
+				minute: '2-digit',
+				hourCycle: 'h23',
+			})
+				.formatToParts()
+				.map((x) => [x.type, x.value]),
+		);
+		return { day: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` };
+	}
+
+	function showDay(day: string) {
+		tabs.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.tab === day)));
+		sections.forEach((s) => (s.hidden = s.dataset.day !== day));
+	}
+
+	function applyFilter(section: HTMLElement) {
+		const filter = section.querySelector('[data-filter][aria-pressed="true"]')?.getAttribute('data-filter');
+		section.querySelectorAll<HTMLElement>('.ev').forEach((ev) => {
+			ev.hidden = !(filter === 'all' || (filter === 'fav' ? favs.has(ev.id) : ev.dataset.filter === filter));
+		});
+		section.querySelectorAll<HTMLElement>('.group').forEach((g) => {
+			g.hidden = !g.querySelector('.ev:not([hidden])');
+		});
+		section.querySelector('.empty')?.toggleAttribute('hidden', !!section.querySelector('.ev:not([hidden])'));
+	}
+
+	function markTime() {
+		const now = kyivNow();
+		const evs = [...document.querySelectorAll<HTMLElement>('.ev')];
+		const next = evs
+			.filter((ev) => ev.dataset.day === now.day)
+			.map((ev) => ev.dataset.start ?? '')
+			.filter((s) => s > now.time)
+			.sort()[0];
+		evs.forEach((ev) => {
+			const { day = '', start = '', end = '' } = ev.dataset;
+			ev.classList.toggle('past', day < now.day || (day === now.day && end <= now.time));
+			ev.classList.toggle('now', day === now.day && start <= now.time && now.time < end);
+			ev.classList.toggle('next', day === now.day && start === next);
+		});
+	}
+
+	tabs.forEach((t) => t.addEventListener('click', () => showDay(t.dataset.tab ?? '')));
+
+	sections.forEach((section) => {
+		section.addEventListener('click', (e) => {
+			if (!(e.target instanceof Element)) return;
+			const chip = e.target.closest('.chips [data-filter]');
+			if (chip) {
+				section.querySelectorAll('.chips [data-filter]').forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+				applyFilter(section);
+			}
+			const star = e.target.closest<HTMLElement>('.star');
+			if (star) {
+				const id = star.dataset.id ?? '';
+				favs.has(id) ? favs.delete(id) : favs.add(id);
+				star.setAttribute('aria-pressed', String(favs.has(id)));
+				try {
+					localStorage.setItem(KEY, JSON.stringify([...favs]));
+				} catch {}
+				applyFilter(section);
+			}
+		});
+	});
+
+	document.querySelectorAll<HTMLElement>('.star').forEach((s) => {
+		s.setAttribute('aria-pressed', String(favs.has(s.dataset.id ?? '')));
+	});
+
+	const today = kyivNow().day;
+	showDay([...tabs].some((t) => t.dataset.tab === today) ? today : (tabs[0].dataset.tab ?? ''));
+	markTime();
+	setInterval(markTime, 60_000);
+</script>
+
+<style>
+	.hero {
+		position: relative;
+		background: var(--wine);
+		text-align: center;
+		padding: 48px 16px 96px;
+		overflow: hidden;
+	}
+	.hero::before {
+		content: '';
+		position: absolute;
+		inset: 12px 12px 0;
+		outline: 1px solid color-mix(in srgb, var(--orange) 60%, transparent);
+		outline-offset: 4px;
+		border-radius: 6px;
+		pointer-events: none;
+	}
+	h1 {
+		margin: 0;
+		font: 500 clamp(2rem, 7vw, 3.6rem) / 1.1 var(--display);
+	}
+	h1 span {
+		display: block;
+		margin-top: 6px;
+		font-size: 0.45em;
+	}
+	.dragon {
+		display: block;
+		width: min(260px, 60vw);
+		height: auto;
+		margin: 24px auto 16px;
+	}
+	.kicker {
+		margin: 0;
+		font-weight: 800;
+		letter-spacing: 0.04em;
+	}
+	.ridge {
+		position: absolute;
+		left: 0;
+		bottom: -1px;
+		width: 100%;
+		height: 80px;
+	}
+	.die {
+		position: absolute;
+		width: clamp(56px, 12vw, 120px);
+		height: auto;
+		opacity: 0.9;
+	}
+	.d20 {
+		top: 36px;
+		left: 6%;
+		rotate: -12deg;
+	}
+	.d12 {
+		bottom: 40px;
+		left: 12%;
+		rotate: 18deg;
+	}
+	.d10 {
+		top: 44px;
+		right: 7%;
+		rotate: 14deg;
+	}
+	.d100 {
+		bottom: 36px;
+		right: 11%;
+		rotate: -8deg;
+	}
+	@media (max-width: 640px) {
+		.hero {
+			padding-top: 40px;
+		}
+		.d20 {
+			top: 24px;
+			left: 16px;
+		}
+		.d12,
+		.d10 {
+			display: none;
+		}
+		.d100 {
+			top: 24px;
+			bottom: auto;
+			right: 16px;
+		}
+	}
+
+	.tabs {
+		position: sticky;
+		top: 0;
+		z-index: 2;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 8px;
+		padding: 10px 16px;
+		background: color-mix(in srgb, var(--wine-deep) 92%, transparent);
+		backdrop-filter: blur(8px);
+		max-width: 880px;
+		margin: 0 auto;
+	}
+	.tabs button {
+		display: grid;
+		padding: 8px 6px;
+		border: 2px solid color-mix(in srgb, var(--orange) 60%, transparent);
+		border-radius: 12px;
+		background: transparent;
+		cursor: pointer;
+	}
+	.tabs b {
+		font: 700 1.05rem var(--display);
+	}
+	.tabs small {
+		font-size: 0.7rem;
+		opacity: 0.8;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.tabs button[aria-pressed='true'] {
+		background: color-mix(in srgb, var(--orange) 60%, transparent);
+		box-shadow: 3px 3px 0 var(--orange);
+	}
+
+	main {
+		max-width: 880px;
+		margin: 0 auto;
+		padding: 0 16px 48px;
+	}
+	.chips {
+		display: flex;
+		gap: 6px;
+		overflow-x: auto;
+		padding: 8px 0 12px;
+		scrollbar-width: none;
+	}
+	.chips button {
+		flex: none;
+		padding: 6px 12px;
+		border: 1.5px solid color-mix(in srgb, var(--cream) 35%, transparent);
+		border-radius: 999px;
+		background: transparent;
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.chips button[aria-pressed='true'] {
+		background: var(--orange);
+		border-color: var(--orange);
+		color: var(--wine-deep);
+	}
+
+	.group {
+		margin-top: 18px;
+	}
+	.group h2,
+	.group summary {
+		margin: 0 0 8px;
+		font: 700 1.1rem var(--display);
+		color: var(--yellow);
+	}
+	.group summary {
+		cursor: pointer;
+		color: var(--cyan);
+	}
+	.group summary span {
+		font-size: 0.8rem;
+		opacity: 0.7;
+	}
+	.empty {
+		text-align: center;
+		opacity: 0.8;
+		padding: 32px 0;
+	}
+	.empty img {
+		display: block;
+		margin: 0 auto 12px;
+		rotate: -12deg;
+	}
+
+	footer {
+		text-align: center;
+		padding: 24px 16px 40px;
+		font-size: 0.85rem;
+		opacity: 0.7;
+	}
+	footer a {
+		color: var(--orange);
+	}
+</style>

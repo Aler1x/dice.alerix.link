@@ -1,23 +1,55 @@
+---
+interface Props {
+	title: string;
+	description: string;
+}
+const { title, description } = Astro.props;
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="uk">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
+		<meta name="theme-color" content="#5c1a3a" />
+		<link rel="icon" type="image/webp" href="/d20.webp" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;600;800&display=swap&subset=cyrillic"
+		/>
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{title}</title>
 	</head>
 	<body>
 		<slot />
 	</body>
 </html>
 
-<style>
-	html,
+<style is:global>
+	:root {
+		--wine: #5c1a3a;
+		--wine-deep: #3f0f27;
+		--cream: #fef0d1;
+		--orange: #f26a3d;
+		--yellow: #ffcd00;
+		--cyan: #13bfe1;
+		--display: 'Unbounded', system-ui, sans-serif;
+		color-scheme: dark;
+	}
+	* {
+		box-sizing: border-box;
+	}
 	body {
 		margin: 0;
-		width: 100%;
-		height: 100%;
+		background: var(--wine-deep);
+		color: var(--cream);
+		font: 16px/1.45 'Manrope', system-ui, sans-serif;
+	}
+	button {
+		font: inherit;
+		color: inherit;
 	}
 </style>

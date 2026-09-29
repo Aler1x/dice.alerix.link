@@ -1,0 +1,115 @@
+---
+import type schedule from '../data/schedule.json';
+
+interface Props {
+	e: (typeof schedule)[number];
+	filter: string;
+}
+const { e, filter } = Astro.props;
+---
+
+<article class="ev" id={e.id} data-day={e.day} data-start={e.start} data-end={e.end} data-filter={filter}>
+	<time>{e.start}<span>–{e.end}</span></time>
+	<div class="body">
+		<h3>{e.title}</h3>
+		{e.speaker && <p class="speaker">{e.speaker}</p>}
+		<p class="meta">
+			{[e.venue, e.place].filter(Boolean).join(' · ')}
+			{e.note && <span class="note">{e.note}</span>}
+		</p>
+	</div>
+	<button type="button" class="star" data-id={e.id} aria-pressed="false" aria-label="В обране">★</button>
+</article>
+
+<style>
+	.ev {
+		display: grid;
+		grid-template-columns: 5.2rem 1fr auto;
+		gap: 12px;
+		align-items: start;
+		margin-bottom: 8px;
+		padding: 12px 12px 12px 14px;
+		background: var(--wine);
+		border: 1.5px solid color-mix(in srgb, var(--cream) 12%, transparent);
+		border-radius: 14px;
+	}
+	time {
+		display: grid;
+		font: 700 1rem var(--display);
+		color: var(--orange);
+	}
+	time span {
+		font-size: 0.8rem;
+		opacity: 0.8;
+	}
+	h3 {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 800;
+	}
+	p {
+		margin: 4px 0 0;
+		font-size: 0.85rem;
+	}
+	.speaker {
+		opacity: 0.85;
+		font-style: italic;
+	}
+	.meta {
+		color: var(--cyan);
+		font-weight: 600;
+	}
+	.note {
+		display: block;
+		width: fit-content;
+		margin-top: 4px;
+		padding: 2px 8px;
+		border-radius: 6px;
+		background: color-mix(in srgb, var(--orange) 40%, transparent);
+		color: var(--cream);
+	}
+	.star {
+		width: 36px;
+		height: 36px;
+		border: 0;
+		border-radius: 50%;
+		background: transparent;
+		font-size: 1.3rem;
+		color: color-mix(in srgb, var(--cream) 30%, transparent);
+		cursor: pointer;
+	}
+	.star[aria-pressed='true'] {
+		color: var(--yellow);
+	}
+
+	.past {
+		opacity: 0.45;
+	}
+	.now {
+		border-color: var(--orange);
+		box-shadow: 4px 4px 0 var(--orange);
+	}
+	.now h3::before,
+	.next h3::before {
+		content: 'Зараз';
+		display: inline-block;
+		margin-right: 8px;
+		padding: 0 8px;
+		border-radius: 999px;
+		background: var(--orange);
+		color: var(--wine-deep);
+		font: 700 0.7rem/1.6 var(--display);
+		vertical-align: 2px;
+	}
+	.next h3::before {
+		content: 'Далі';
+		background: var(--yellow);
+	}
+
+	@media (max-width: 480px) {
+		.ev {
+			grid-template-columns: 4.2rem 1fr auto;
+			gap: 8px;
+		}
+	}
+</style>
