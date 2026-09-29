@@ -1,0 +1,62 @@
+---
+const DICE = ['d10', 'd12', 'd20', 'd100'];
+const COLS = 5;
+const ROWS = 5;
+const FILL_CHANCE = 0.62;
+
+function mulberry32(seed: number) {
+	let state = seed;
+	return () => {
+		state = (state + 0x6d2b79f5) | 0;
+		let t = Math.imul(state ^ (state >>> 15), 1 | state);
+		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
+}
+
+// ponytail: seeded at build time, so the layout changes on each deploy only
+const rand = mulberry32(Date.now());
+const cellW = 100 / COLS;
+const cellH = 100 / ROWS;
+
+const tiles = Array.from({ length: COLS * ROWS }, (_, i) => {
+	if (rand() > FILL_CHANCE) return null;
+	const col = i % COLS;
+	const row = Math.floor(i / COLS);
+	return {
+		die: DICE[Math.floor(rand() * DICE.length)],
+		left: col * cellW + cellW / 2 + (rand() - 0.5) * cellW * 0.75,
+		top: row * cellH + cellH / 2 + (rand() - 0.5) * cellH * 0.75,
+		rotate: Math.floor(rand() * 360),
+		size: 40 + Math.floor(rand() * 28),
+		opacity: 0.06 + rand() * 0.08,
+	};
+}).filter((t) => t !== null);
+---
+
+<div class="field" aria-hidden="true">
+	{tiles.map((t) => (
+		<img
+			src={`/${t.die}.webp`}
+			alt=""
+			width={t.size}
+			height={t.size}
+			style={`left: ${t.left}%; top: ${t.top}%; opacity: ${t.opacity}; rotate: ${t.rotate}deg;`}
+		/>
+	))}
+</div>
+
+<style>
+	.field {
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		overflow: hidden;
+		pointer-events: none;
+	}
+	img {
+		position: absolute;
+		object-fit: contain;
+		translate: -50% -50%;
+	}
+</style>
