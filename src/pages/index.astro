@@ -126,8 +126,15 @@ const days = DAYS.map((d) => {
 		section.querySelector('.empty')?.toggleAttribute('hidden', !!section.querySelector('.ev:not([hidden])'));
 	}
 
+	let shownDate = '';
+
 	function markTime() {
 		const now = kyivNow();
+		// Switch tab only when the date changes, so a manual tab choice stays for the rest of the day
+		if (now.day !== shownDate) {
+			shownDate = now.day;
+			if ([...tabs].some((t) => t.dataset.tab === now.day)) showDay(now.day);
+		}
 		const evs = [...document.querySelectorAll<HTMLElement>('.ev')];
 		const next = evs
 			.filter((ev) => ev.dataset.day === now.day)
@@ -169,10 +176,11 @@ const days = DAYS.map((d) => {
 		s.setAttribute('aria-pressed', String(favs.has(s.dataset.id ?? '')));
 	});
 
-	const today = kyivNow().day;
-	showDay([...tabs].some((t) => t.dataset.tab === today) ? today : (tabs[0].dataset.tab ?? ''));
+	showDay(tabs[0].dataset.tab ?? '');
 	markTime();
 	setInterval(markTime, 60_000);
+	// Timers pause in the background, so check again when the app comes back to the screen
+	document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && markTime());
 </script>
 
 <style>
