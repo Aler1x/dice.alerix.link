@@ -10,10 +10,14 @@ const { title, description } = Astro.props;
 <html lang="uk">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 		<meta name="description" content={description} />
 		<meta name="theme-color" content="#5c1a3a" />
-		<link rel="icon" type="image/webp" href="/d20.webp" />
+		<meta property="og:title" content={title} />
+		<meta property="og:site_name" content="Дайс Кон" />
+		<link rel="icon" type="image/png" sizes="64x64" href="/images/favicon.png" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+		<link rel="manifest" href="/manifest.json" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
@@ -25,6 +29,15 @@ const { title, description } = Astro.props;
 	</head>
 	<body>
 		<slot />
+		<script>
+			if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+				window.addEventListener('load', () => {
+					navigator.serviceWorker
+						.register(`/sw.js?v=${APP_VERSION}`)
+						.catch((error) => console.error('Service worker registration failed:', error));
+				});
+			}
+		</script>
 	</body>
 </html>
 
