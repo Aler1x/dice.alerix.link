@@ -16,5 +16,12 @@
   },
   "allowScripts": {
     "esbuild": true
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "nub",
+      "version": "^0.9.1",
+      "onFail": "ignore"
+    }
   }
 }
