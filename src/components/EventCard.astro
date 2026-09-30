@@ -1,5 +1,6 @@
 ---
 import type schedule from '../data/schedule.json';
+import FavIcon from './FavIcon.astro';
 
 interface Props {
 	e: (typeof schedule)[number];
@@ -18,7 +19,7 @@ const { e, filter } = Astro.props;
 			{e.note && <span class="note">{e.note}</span>}
 		</p>
 	</div>
-	<button type="button" class="star" data-id={e.id} aria-pressed="false" aria-label="В обране">★</button>
+	<button type="button" class="star" data-id={e.id} aria-pressed="false" aria-label="В обране"><FavIcon /></button>
 </article>
 
 <style>
@@ -74,12 +75,16 @@ const { e, filter } = Astro.props;
 		border: 0;
 		border-radius: 50%;
 		background: transparent;
-		font-size: 1.3rem;
-		color: color-mix(in srgb, var(--cream) 30%, transparent);
+		font-size: 1.4rem;
+		line-height: 1;
+		/* Opacity on the button, not an alpha color: fill and stroke overlap, and alpha shows the seam */
+		color: var(--cream);
+		opacity: 0.3;
 		cursor: pointer;
 	}
 	.star[aria-pressed='true'] {
 		color: var(--yellow);
+		opacity: 1;
 	}
 
 	.past {

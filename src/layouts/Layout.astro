@@ -44,6 +44,12 @@ const imageAlt = 'Дракон ДайсКон і напис «Розклад Д�
 		/>
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<!-- Runs before paint, so the saved favorite icon does not flash -->
+		<script is:inline>
+			try {
+				if (localStorage.getItem('dicecon-icon') === 'dice') document.documentElement.classList.add('dice');
+			} catch {}
+		</script>
 	</head>
 	<body>
 		<slot />
@@ -79,8 +85,19 @@ const imageAlt = 'Дракон ДайсКон і напис «Розклад Д�
 		color: var(--cream);
 		font: 16px/1.45 'Manrope', system-ui, sans-serif;
 	}
+	* {
+		-webkit-tap-highlight-color: transparent;
+	}
+	/* Component display rules (grid, flex) must not override the hidden attribute */
+	[hidden] {
+		display: none !important;
+	}
 	button {
 		font: inherit;
 		color: inherit;
+	}
+	button:focus-visible {
+		outline: 2px solid var(--yellow);
+		outline-offset: 2px;
 	}
 </style>

@@ -1,6 +1,7 @@
 ---
 import DiceField from '../components/DiceField.astro';
 import EventCard from '../components/EventCard.astro';
+import FavIcon from '../components/FavIcon.astro';
 import Layout from '../layouts/Layout.astro';
 import schedule from '../data/schedule.json';
 
@@ -56,11 +57,11 @@ const days = DAYS.map((d) => {
 			<section class="day" data-day={d.day} hidden>
 				<div class="chips" role="group" aria-label="Фільтр">
 					<button type="button" data-filter="all" aria-pressed="true">Усі</button>
-					<button type="button" data-filter="fav" aria-pressed="false">★ Обране</button>
+					<button type="button" data-filter="fav" aria-pressed="false"><FavIcon /> Обране</button>
 					{d.filters.map((f) => <button type="button" data-filter={f} aria-pressed="false">{f}</button>)}
 				</div>
 
-				<p class="empty" hidden><img src="/d20.webp" width="72" alt="" />Тут порожньо. Тисни ☆ біля події, щоб додати її в обране.</p>
+				<p class="empty" hidden><img src="/d20.webp" width="72" alt="" />Тут порожньо. Тисни <FavIcon /> біля події, щоб додати її в обране.</p>
 
 				{d.allDay.length > 0 && (
 					<details class="group">
@@ -79,12 +80,17 @@ const days = DAYS.map((d) => {
 	</main>
 
 	<footer>
-		Неофіційний розклад. Актуальне — на <a href="https://www.dicecon.fun/">dicecon.fun</a>
+		<button type="button" class="icon-toggle" aria-pressed="false">
+			<span class="switch" aria-hidden="true"></span>
+			Кубики замість зірочок
+		</button>
+		<p>Неофіційний розклад. Актуальне — на <a href="https://www.dicecon.fun/">dicecon.fun</a></p>
 	</footer>
 </Layout>
 
 <script>
 	const KEY = 'dicecon-favs';
+	const ICON_KEY = 'dicecon-icon';
 	let favs = new Set<string>();
 	try {
 		favs = new Set(JSON.parse(localStorage.getItem(KEY) ?? '[]'));
@@ -174,6 +180,16 @@ const days = DAYS.map((d) => {
 
 	document.querySelectorAll<HTMLElement>('.star').forEach((s) => {
 		s.setAttribute('aria-pressed', String(favs.has(s.dataset.id ?? '')));
+	});
+
+	const iconToggle = document.querySelector<HTMLButtonElement>('.icon-toggle');
+	iconToggle?.setAttribute('aria-pressed', String(document.documentElement.classList.contains('dice')));
+	iconToggle?.addEventListener('click', () => {
+		const dice = document.documentElement.classList.toggle('dice');
+		iconToggle.setAttribute('aria-pressed', String(dice));
+		try {
+			localStorage.setItem(ICON_KEY, dice ? 'dice' : 'star');
+		} catch {}
 	});
 
 	showDay(tabs[0].dataset.tab ?? '');
@@ -378,7 +394,44 @@ const days = DAYS.map((d) => {
 		text-align: center;
 		padding: 24px 16px 40px;
 		font-size: 0.85rem;
+	}
+	footer p {
 		opacity: 0.7;
+	}
+	.icon-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		padding: 8px 12px;
+		border: 0;
+		background: transparent;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.switch {
+		position: relative;
+		width: 40px;
+		height: 22px;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--cream) 25%, transparent);
+		transition: background 0.2s;
+	}
+	.switch::after {
+		content: '';
+		position: absolute;
+		top: 3px;
+		left: 3px;
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		background: var(--cream);
+		transition: translate 0.2s;
+	}
+	.icon-toggle[aria-pressed='true'] .switch {
+		background: var(--orange);
+	}
+	.icon-toggle[aria-pressed='true'] .switch::after {
+		translate: 18px 0;
 	}
 	footer a {
 		color: var(--orange);
