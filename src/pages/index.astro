@@ -312,6 +312,10 @@ const days = DAYS.map((d) => {
 		border-radius: 12px;
 		background: transparent;
 		cursor: pointer;
+		transition:
+			transform 160ms var(--ease-out),
+			background-color 150ms ease,
+			box-shadow 150ms ease;
 	}
 	.tabs b {
 		font: 700 1.05rem var(--display);
@@ -347,6 +351,7 @@ const days = DAYS.map((d) => {
 		scrollbar-width: none;
 	}
 	.chips button {
+		position: relative;
 		flex: none;
 		padding: 6px 12px;
 		border: 1.5px solid color-mix(in srgb, var(--cream) 35%, transparent);
@@ -355,11 +360,30 @@ const days = DAYS.map((d) => {
 		font-size: 0.85rem;
 		font-weight: 600;
 		cursor: pointer;
+		transition:
+			transform 160ms var(--ease-out),
+			background-color 150ms ease,
+			border-color 150ms ease,
+			color 150ms ease;
+	}
+	/* Grows the tap target to about 44px without a change to the chip size */
+	.chips button::before {
+		content: '';
+		position: absolute;
+		inset: -6px -3px;
 	}
 	.chips button[aria-pressed='true'] {
 		background: var(--orange);
 		border-color: var(--orange);
 		color: var(--wine-deep);
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.tabs button:not([aria-pressed='true']):hover {
+			background: color-mix(in srgb, var(--orange) 15%, transparent);
+		}
+		.chips button:not([aria-pressed='true']):hover {
+			border-color: color-mix(in srgb, var(--cream) 70%, transparent);
+		}
 	}
 
 	.group {
@@ -383,6 +407,13 @@ const days = DAYS.map((d) => {
 		text-align: center;
 		opacity: 0.8;
 		padding: 32px 0;
+		transition:
+			opacity 200ms var(--ease-out),
+			translate 200ms var(--ease-out);
+		@starting-style {
+			opacity: 0;
+			translate: 0 6px;
+		}
 	}
 	.empty img {
 		display: block;
@@ -414,7 +445,7 @@ const days = DAYS.map((d) => {
 		height: 22px;
 		border-radius: 999px;
 		background: color-mix(in srgb, var(--cream) 25%, transparent);
-		transition: background 0.2s;
+		transition: background-color 200ms ease;
 	}
 	.switch::after {
 		content: '';
@@ -425,7 +456,12 @@ const days = DAYS.map((d) => {
 		height: 16px;
 		border-radius: 50%;
 		background: var(--cream);
-		transition: translate 0.2s;
+		transition: translate 200ms var(--ease-out);
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.icon-toggle:not([aria-pressed='true']):hover .switch {
+			background: color-mix(in srgb, var(--cream) 40%, transparent);
+		}
 	}
 	.icon-toggle[aria-pressed='true'] .switch {
 		background: var(--orange);

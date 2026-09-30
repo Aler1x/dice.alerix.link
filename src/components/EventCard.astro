@@ -70,8 +70,9 @@ const { e, filter } = Astro.props;
 		color: var(--cream);
 	}
 	.star {
-		width: 36px;
-		height: 36px;
+		width: 44px;
+		height: 44px;
+		margin: -4px;
 		border: 0;
 		border-radius: 50%;
 		background: transparent;
@@ -81,10 +82,22 @@ const { e, filter } = Astro.props;
 		color: var(--cream);
 		opacity: 0.3;
 		cursor: pointer;
+		transition:
+			transform 160ms var(--ease-out),
+			color 150ms ease,
+			opacity 150ms ease;
+	}
+	.star:active {
+		transform: scale(0.85);
 	}
 	.star[aria-pressed='true'] {
 		color: var(--yellow);
 		opacity: 1;
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.star:not([aria-pressed='true']):hover {
+			opacity: 0.6;
+		}
 	}
 
 	.past {
