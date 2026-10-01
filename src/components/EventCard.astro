@@ -10,7 +10,7 @@ const { e, filter } = Astro.props;
 ---
 
 <article class="ev" id={e.id} data-day={e.day} data-start={e.start} data-end={e.end} data-filter={filter}>
-	<time>{e.start}<span>–{e.end}</span></time>
+	<time>{e.start}<span>{e.end}</span></time>
 	<div class="body">
 		<h3>{e.title}</h3>
 		{e.speaker && <p class="speaker">{e.speaker}</p>}
@@ -28,10 +28,10 @@ const { e, filter } = Astro.props;
 		grid-template-columns: 5.2rem 1fr auto;
 		gap: 12px;
 		align-items: start;
-		margin-bottom: 8px;
+		margin-bottom: 12px;
 		padding: 12px 12px 12px 14px;
 		background: var(--wine);
-		border: 1.5px solid color-mix(in srgb, var(--cream) 12%, transparent);
+		border: 2px solid color-mix(in srgb, var(--cream) 12%, transparent);
 		border-radius: 14px;
 	}
 	time {
@@ -107,21 +107,9 @@ const { e, filter } = Astro.props;
 		border-color: var(--orange);
 		box-shadow: 4px 4px 0 var(--orange);
 	}
-	.now h3::before,
-	.next h3::before {
-		content: 'Зараз';
-		display: inline-block;
-		margin-right: 8px;
-		padding: 0 8px;
-		border-radius: 999px;
-		background: var(--orange);
-		color: var(--wine-deep);
-		font: 700 0.7rem/1.6 var(--display);
-		vertical-align: 2px;
-	}
-	.next h3::before {
-		content: 'Далі';
-		background: var(--yellow);
+	.next {
+		border-color: var(--yellow);
+		box-shadow: 4px 4px 0 var(--yellow);
 	}
 
 	@media (max-width: 480px) {
