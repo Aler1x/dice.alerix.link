@@ -4,8 +4,8 @@ const HOME = "/";
 const HASHED_PATH = "/_astro/";
 
 const isHtml = (response) => (response.headers.get("content-type") ?? "").includes("text/html");
-// Navigations must get HTML, anything else must not
-const isUsable = (request, response) => response.ok && isHtml(response) === (request.mode === "navigate");
+// Subresources must not get HTML. Navigations can open any file, such as /map.webp.
+const isUsable = (request, response) => response.ok && (request.mode === "navigate" || !isHtml(response));
 
 self.addEventListener("install", (event) => {
   event.waitUntil(precache().then(() => self.skipWaiting()));
