@@ -50,6 +50,10 @@ const days = DAYS.map((d) => {
 				<small>{d.sub}</small>
 			</button>
 		))}
+		<button type="button" data-tab="map">
+			<b>Мапа</b>
+			<small>Локації</small>
+		</button>
 	</nav>
 
 	<main>
@@ -77,6 +81,12 @@ const days = DAYS.map((d) => {
 				))}
 			</section>
 		))}
+		<section class="day map" data-day="map" hidden>
+			<a href="/map.webp" target="_blank">
+				<img src="/map.webp" width="1280" height="1280" loading="lazy" alt="Мапа локацій ДайсКон 2026 на !FESTrepublic: 9 корпус, Укриття, Ангар, Тераса, Клуб, Лекторій, Кав’ярня, Медіаточка, Ярмарок, Історичні бої, входи та рецепції" />
+			</a>
+			<p>Торкнись мапи, щоб відкрити її на весь екран.</p>
+		</section>
 	</main>
 
 	<footer>
@@ -296,7 +306,7 @@ const days = DAYS.map((d) => {
 		top: 0;
 		z-index: 2;
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(4, 1fr);
 		gap: 8px;
 		height: var(--tabs-h);
 		padding: 10px 16px;
@@ -384,6 +394,21 @@ const days = DAYS.map((d) => {
 		.chips button:not([aria-pressed='true']):hover {
 			border-color: color-mix(in srgb, var(--cream) 70%, transparent);
 		}
+	}
+
+	.map {
+		padding-top: 16px;
+		text-align: center;
+	}
+	.map img {
+		display: block;
+		width: 100%;
+		height: auto;
+		border-radius: 12px;
+	}
+	.map p {
+		font-size: 0.85rem;
+		opacity: 0.7;
 	}
 
 	.group {
